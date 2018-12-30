@@ -3,33 +3,15 @@
 # from trainer.tf_methods import *
 #
 import os.path
+import winsound
 
-import csv
-import collections
-from trainer.tester.csv_methods import *
-from io import BytesIO
-from tensorflow.python.platform import gfile
-from keras.preprocessing.image import *
-import numpy as np
-import keras
-from keras.layers import Flatten,Dense,GlobalAveragePooling2D
-from keras.models import Model
 from keras.applications.inception_v3 import InceptionV3
-from keras.preprocessing import image
-
-from keras.applications.inception_v3 import preprocess_input
-from keras.applications.inception_v3 import decode_predictions
-
-import keras
-import tensorflow as tf
-from keras.preprocessing.image import ImageDataGenerator
+from trainer.tester.csv_methods import *
 
 from data.bottleneck.BottleneckRepository import *
 from data.bottleneck.helpers.tf_methods import *
+from utils.params_extractor import Flags
 
-
-import winsound
-from data.bottleneck.helpers.params_extractor import Flags
 FLAGS = Flags()
 rng = np.random
 

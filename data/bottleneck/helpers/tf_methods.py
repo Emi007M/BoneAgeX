@@ -1,4 +1,3 @@
-import hashlib
 import os.path
 import re
 import sys
@@ -10,17 +9,31 @@ import tensorflow as tf
 
 from tensorflow.python.framework import graph_util
 from tensorflow.python.platform import gfile
-from tensorflow.python.util import compat
 from shutil import copyfile
 import pickle
 
 from data.bottleneck.helpers.bottlenecks_randomizer import BottlenecksRandomizer
-from data.bottleneck.helpers.params_extractor import Flags
+from utils.params_extractor import Flags
+import os.path
+import pickle
+import re
+import sys
+import tarfile
+from shutil import copyfile
+
+import numpy as np
+import tensorflow as tf
+from six.moves import urllib
+from tensorflow.python.framework import graph_util
+from tensorflow.python.platform import gfile
+
+from data.bottleneck.helpers.bottlenecks_randomizer import BottlenecksRandomizer
+from utils.params_extractor import Flags
+
 FLAGS = Flags()
 
 
 from keras.applications.inception_v3 import preprocess_input
-from keras.applications.inception_v3 import decode_predictions
 
 from keras.preprocessing import image
 #

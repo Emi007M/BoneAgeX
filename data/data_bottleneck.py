@@ -5,7 +5,7 @@ from data.IData import Data
 from data.bottleneck.BottleneckRepository import *
 from data.bottleneck.helpers.tf_methods import *
 
-from data.bottleneck.helpers.params_extractor import Flags
+from utils.params_extractor import Flags
 FLAGS = Flags()
 
 

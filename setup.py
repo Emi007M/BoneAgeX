@@ -5,7 +5,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         'pip==9.0.1',
-        'dotmap',
         'keras',
         'pillow',
         'pillow-pil',

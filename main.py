@@ -1,19 +1,16 @@
+from optparse import OptionParser
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from optparse import OptionParser
+from keras.models import model_from_json
 
 from data.DataService import DataService, DataType
-from graphs.GraphService import GraphService, GraphType
-from graphs.IGraph import Graph
-
 from data.bottleneck.BottleneckRepository import extract_genders
+from data.bottleneck.helpers.tf_methods import unscaleAge
+from graphs.GraphService import GraphService, GraphType
+from utils.params_extractor import Flags
 
-from data.bottleneck.helpers.tf_methods import unscaleAgeT, unscaleAge
-from keras.models import model_from_json
-from keras import backend as K
-
-from data.bottleneck.helpers.params_extractor import Flags
 FLAGS = Flags()
 
 # from termcolor import *
@@ -388,7 +385,7 @@ if __name__ == "__main__":
     # main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=True)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=False)
 
-# trainingData - to preapare train and validation sets of images in 2 folders with saved gender in file names
+# trainingData - to prepare train and validation sets of images in 2 folders with saved gender in file names
 # bottleneck_maker (from train3) - can be used to produce bottlenecks from previously prepared divided images
 # test_new = (from test) to asses either single image or set of images with gender taken from csv
 # to profile: in terminal python -m cprovilev main2.py

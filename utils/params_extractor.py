@@ -1,6 +1,5 @@
 from datetime import datetime
 from time import gmtime, strftime
-from dotmap import DotMap
 
 class Flags(object):
     _instance = None
@@ -8,16 +7,17 @@ class Flags(object):
         if not cls._instance:
             cls._instance = super(Flags, cls).__new__(cls, *args, **kwargs)
 
-
-        # def extract_parameters():
         name = '12'
         # image_dir_folder = 'three_classes'
         image_dir_folder = 'FM_labeled_train_validate'
+        #image_dir_folder = 'imgs'
         epochs = 20
         create_bottlenecks = 0
         batch_size = 4 # ?
 
         d = 'C:/Users/Emilia/Pycharm Projects/BoneAge/'
+
+        # image_dir,  summaries_dir, output_graph ?,
 
         cls._instance.image_dir =            d + 'training_dataset/' + image_dir_folder  # Path to folders of labeled images
         cls._instance.create_bottlenecks =   create_bottlenecks  # Path to folders of labeled images
@@ -41,32 +41,4 @@ class Flags(object):
         cls._instance.saved_model_dir =      d + 'model/saved_models/' + name + '-' + strftime("%Y-%m-%d %H.%M.%S", gmtime()) + '/' # Where to save the exported graph
         cls._instance.gpus = 1 # how many gpus available
 
-
-        # FLAGS = {
-        #     'image_dir':            d + 'training_dataset/' + image_dir_folder,  # Path to folders of labeled images
-        #     'bottleneck_dir':       d + 'bottleneck/' + image_dir_folder,  # Path to cache bottleneck layer values as files
-        #     'create_bottlenecks':   create_bottlenecks,  # Path to folders of labeled images
-        #     'output_graph':         d + 'model/output_graph/' + name + '/output_graph' + '-' + strftime("%m-%d %H.%M.%S", gmtime()), # Where to save the trained graph
-        #     'output_graph_fin':     'model',  # Where to save the trained graph
-        #     'intermediate_output_graphs_dir': d + 'model/intermediate_graph/' + name + '/',  # Where to save the intermediate graphs
-        #     'intermediate_store_frequency': 0,  # How many steps to store intermediate graph. If "0" then will not store
-        #     'output_labels':        d + 'model/output_labels.txt',  # Where to save the trained graph's labels
-        #     'summaries_dir':        d + 'model/models/retrain_logs/' + name + '-' + strftime("%Y-%m-%d %H.%M.%S", gmtime()),    # Where to save summary logs for TensorBoard
-        #     'how_many_epochs':      epochs,  # How many training steps to run before ending
-        #     'learning_rate':        0.001,  # How large a learning rate to use when training
-        #     'testing_percentage':   0,  # What percentage of images to use as a test set
-        #     'validation_percentage': 15,  # What percentage of images to use as a validation set
-        #     'eval_step_interval':   50,  # How often to evaluate the training results
-        #     'train_batch_size':     batch_size,  # How many images to train on at a time
-        #     'validation_batch_size': batch_size,  # -..-
-        #     'model_dir':            d + 'model/imagenet', # Path to classify_image_graph_def.pb, imagenet_synset_to_human_label_map.txt, and imagenet_2012_challenge_label_map_proto.pbtxt
-        #     'final_tensor_name':    'output_layer',  # The name of the output classification layer in the retrained graph
-        #     'architecture':         'inception_v3',  # .
-        #     'saved_model_dir':      d + 'model/saved_models/' + name + '-' + strftime("%Y-%m-%d %H.%M.%S", gmtime()) + '/' # Where to save the exported graph
-        # }
-        # flags = DotMap(FLAGS)
-        #
-        # cls._instance.flags = flags
         return cls._instance
-
-        # return flags

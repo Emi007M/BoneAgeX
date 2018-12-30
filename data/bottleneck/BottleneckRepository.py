@@ -2,30 +2,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import argparse
 import hashlib
 import os.path
+import pickle
 import random
 import re
 import sys
 import tarfile
+from shutil import copyfile
 
 import numpy as np
-from six.moves import urllib
 import tensorflow as tf
-
+from six.moves import urllib
 from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.platform import gfile
 from tensorflow.python.util import compat
 
-from datetime import datetime
-from time import gmtime, strftime
-import pickle
+from utils.params_extractor import Flags
 
-from shutil import copyfile
-
-from data.bottleneck.helpers.params_extractor import Flags
 FLAGS = Flags()
 
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
