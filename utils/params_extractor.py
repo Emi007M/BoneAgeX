@@ -27,7 +27,9 @@ class Flags(object):
         cls._instance.intermediate_output_graphs_dir = d + 'model/intermediate_graph/' + name + '/'  # Where to save the intermediate graphs
         cls._instance.intermediate_store_frequency = 0  # How many steps to store intermediate graph. If "0" then will not store
         cls._instance.output_labels =        d + 'model/output_labels.txt'  # Where to save the trained graph's labels
-        cls._instance.summaries_dir =        d + 'model/models/retrain_logs/' + name + '-' + strftime("%Y-%m-%d %H.%M.%S", gmtime())    # Where to save summary logs for TensorBoard
+        # cls._instance.summaries_dir = d + 'model/models/retrain_logs/' + name + '-' + strftime("%Y-%m-%d %H.%M.%S",
+        #                                                                                        gmtime())  # Where to save summary logs for TensorBoard
+        cls._instance.summaries_dir = strftime("%Y-%m-%d %H.%M.%S", gmtime())  # Where to save summary logs for TensorBoard
         cls._instance.how_many_epochs =      epochs  # How many training steps to run before ending
         cls._instance.learning_rate =        0.001  # How large a learning rate to use when training
         cls._instance.testing_percentage =   0  # What percentage of images to use as a test set

@@ -281,14 +281,14 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
 
 
         # init tensorboard
-        train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train_batch',
+        train_writer = tf.summary.FileWriter(TB_DIR + FLAGS.summaries_dir + '/train_batch',
                                              sess.graph)
 
         validation_set_writer = tf.summary.FileWriter(
-            FLAGS.summaries_dir + '/validation')
+            TB_DIR + FLAGS.summaries_dir + '/validation')
 
         train_set_writer = tf.summary.FileWriter(
-            FLAGS.summaries_dir + '/train')
+            TB_DIR + FLAGS.summaries_dir + '/train')
 
         writers = {
             'train_batch': train_writer,
@@ -368,8 +368,9 @@ def handle_command_line_args():
     parser.add_option("-g", "--gpus", dest="gpus", help="amount of available GPUs", type="int", default=FLAGS.gpus)
     parser.add_option("-i", "--img_dir", dest="img_dir", help="input images dir", type="string", default=FLAGS.image_dir)
 
-    parser.add_option("-m", "--model_save_dir", dest="model_save_dir", help="dir for saving model", type="string", default=FLAGS.saved_model_dir)
-    parser.add_option("-l", "--model_load_dir", dest="model_load_dir", help="trained model dir", type="string", default=FLAGS.saved_model_dir)
+    parser.add_option("-m", "--model_save_dir", dest="model_save_dir", help="dir for saving model", type="string", default="trained_models/")
+    parser.add_option("-l", "--model_load_dir", dest="model_load_dir", help="trained model dir", type="string", default="trained_models/")
+    parser.add_option("-x", "--tb_dir", dest="tb_dir", help="dir for tensorboard logs", type="string", default="tensorboard_logs/")
 
 
     parser.add_option("-n", "--new_model", dest="new_model", help="use for creating new model", action='store_true')
@@ -387,6 +388,7 @@ def handle_command_line_args():
 
     MODEL_DIR = options.model_save_dir
     MODEL_DIR_TO_LOAD = options.model_load_dir
+    TB_DIR = options.tb_dir
 
     N = options.new_model
     T = options.train
@@ -394,13 +396,16 @@ def handle_command_line_args():
     O = options.evaluate
     Z = options.use
 
-    return MODEL_DIR, MODEL_DIR_TO_LOAD, N, T, S, O, Z
+    return MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z
 
 
 if __name__ == "__main__":
 
-    MODEL_DIR = "trained_models/i/"
+    MODEL_DIR = "trained_models/"
     MODEL_DIR_TO_LOAD = MODEL_DIR+"55000/"
+    TB_DIR = "tensorboard_logs/"
+
+
     CHECKPOINT_NAME = "model"
     n_samples = 1000 # applicable only if data struct allows to generate a specified amount of data
     batch_size = 4
@@ -419,7 +424,10 @@ if __name__ == "__main__":
 
     # FLAGS.create_bottlenecks = True
 
-    MODEL_DIR, MODEL_DIR_TO_LOAD, N, T, S, O, Z = handle_command_line_args()
+    MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z = handle_command_line_args()
+
+    if not os.path.exists(TB_DIR):
+        os.makedirs(TB_DIR)
 
     data_service = DataService(DataType.Jpeg)
     data = data_service.get_data_struct().get_all_data(n_samples) # for data_bottleneck will be now None

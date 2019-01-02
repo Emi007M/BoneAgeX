@@ -1,16 +1,15 @@
 # Bone Age Assessment System
 
 ## Download
-image packages under tmp files: [zip1](url), [zip2](url)
-
+image packages under tmp files available on email
 
 ## Installation
 runs under  Python 3.6.2
 ```
 git clone https://github.com/Emi007M/BoneAgeX.git
 cd BoneAgeX
-python -m pip install --U pip
-python pip install -U setuptools
+python3.6 -m pip install --upgrade pip
+python3.6 -m pip install --upgrade setuptools
 pip install .
 ```
 
@@ -19,7 +18,7 @@ pip install .
 Help
 python3.6 main.py --help
 
-Shortest command sholud get input images from -i, create net model -n and use it to predict 10 images from the dataset -z
+Shortest command should get input images from -i, create net model -n and use it to predict 10 images from the dataset -z
 ```
 python3.6 main.py -i "C:/.../BoneAge/imgs_sm" -nz
 ```
