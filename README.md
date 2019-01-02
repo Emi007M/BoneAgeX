@@ -18,5 +18,5 @@ pip install .
 
 ## Launching:
 ```
-python main2.py -b 16 -v 32 -g ? -i <IMG_DIR>
+python main.py -b 16 -v 32 -g 1 -i <IMG_DIR>
 ```

@@ -39,7 +39,7 @@ class ModelEval:
         return ret
 
 class Session:
-    def __init__(self, sess, graph, data ):
+    def __init__(self, sess, graph, data, writers):
         self.sess = sess
         # K.set_session(sess)
         self.graph = graph
@@ -51,6 +51,8 @@ class Session:
         self.loss_val = None
         self.W_val = None
         self.b_val = None
+
+        self.writers = writers
 
     def train_graph(self, epochs, batch_size):
 
@@ -113,6 +115,10 @@ class Session:
                         # self.log.print_eval(self.eval_model(self.step_data)) # eval only batch data after training
                         # self.log.print_eval(self.eval_model(self.data)) # eval whole dataset
 
+                        summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=self.loss_val, ), ])
+                        self.writers['train_batch'].add_summary(summary, e * epoch_steps + i)
+
+
                     if i % 1000 == 0:
                         self.log.print_info("Saving model xx")
                         self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
@@ -123,8 +129,13 @@ class Session:
             self.log.print_info("Evaluations after epoch "+str(e))
 
             # self.log.print_eval(self.eval_model(self.data))
-            self.evaluate_data_graph(batch_size, 'validation')
-            self.evaluate_data_graph(batch_size, 'training')
+            v_MAE = self.evaluate_data_graph(batch_size, 'validation')
+            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
+            self.writers['validation_set'].add_summary(summary, e)
+
+            t_MAE = self.evaluate_data_graph(batch_size, 'training_na')
+            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
+            self.writers['training_set'].add_summary(summary, e)
 
         print("--final evals of last train step:")
         # self.log.print_train_epoch(epochs, self.loss_val)
@@ -155,6 +166,7 @@ class Session:
 
         self.log.print("\r %10s MAE: %10.8f" % (type, whole_MAE), self.log.Styles.HEADER)
 
+        return whole_MAE
 
 
     def save_model(self, model, dir, filename):
@@ -268,6 +280,25 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
         if create_new:
             graphModel = graph_struct.get_graph()
 
+
+        # init tensorboard
+        train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train_batch',
+                                             sess.graph)
+
+        validation_set_writer = tf.summary.FileWriter(
+            FLAGS.summaries_dir + '/validation')
+
+        train_set_writer = tf.summary.FileWriter(
+            FLAGS.summaries_dir + '/train')
+
+        writers = {
+            'train_batch': train_writer,
+            'validation_set': validation_set_writer,
+            'training_set': train_set_writer
+        }
+
+        merged = tf.summary.merge_all()
+
         # -- init graph
         sess.run(tf.global_variables_initializer())
 
@@ -280,7 +311,7 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
             data_service.get_data_struct().init_sess(sess, graph_struct)
             data = data_service.get_data_struct().get_all_data(None)
 
-        s = Session(sess, graphModel, data)
+        s = Session(sess, graphModel, data, writers)
 
         # -- run ops on graph
         if train:
@@ -300,10 +331,10 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
             # s.log.print_info("Evaluation for images from validation dataset")
             # s.log.print_eval(s.eval_model(s.data))
             s.log.print_info("Evaluation for both datasets")
-            s.evaluate_data_graph(FLAGS.validation_batch_size, 'validation')
-            s.evaluate_data_graph(FLAGS.validation_batch_size, 'training')
+            # s.evaluate_data_graph(FLAGS.validation_batch_size, 'validation')
+            s.evaluate_data_graph(FLAGS.validation_batch_size, 'training_na')
 
-            s.print_plot()
+            # s.print_plot()
 
         if use:
             s.log.print_info("Using graph")
@@ -336,11 +367,13 @@ def handle_command_line_args():
     parser.add_option("-v", "--val_batch", dest="val_batch", help="size of a validation batch", type="int", default=FLAGS.validation_batch_size)
     parser.add_option("-e", "--epochs", dest="epochs", help="amount of epochs", type="int", default=FLAGS.how_many_epochs)
     parser.add_option("-g", "--gpus", dest="gpus", help="amount of available GPUs", type="int", default=FLAGS.gpus)
+    parser.add_option("-i", "--img_dir", dest="img_dir", help="input images dir", type="string", default=FLAGS.image_dir)
     (options, args) = parser.parse_args()
     FLAGS.train_batch_size = options.tra_batch
     FLAGS.validation_batch_size = options.val_batch
     FLAGS.how_many_epochs = options.epochs
     FLAGS.gpus = options.gpus
+    FLAGS.image_dir = options.img_dir
 
 
 if __name__ == "__main__":
@@ -356,6 +389,8 @@ if __name__ == "__main__":
     FLAGS.train_batch_size = batch_size
     FLAGS.how_many_epochs = 20
     FLAGS.gpus = 1
+
+    #FLAGS.create_bottlenecks = True
 
     handle_command_line_args()
 
@@ -381,7 +416,7 @@ if __name__ == "__main__":
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=True)
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=False)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=True)
-    main_model(data, graph_struct, create_new=True, train=True, save=False, evaluate=False, use=True)
+    main_model(data, graph_struct, create_new=True, train=True, save=True, evaluate=False, use=True)
     # main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=True)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=False)
 

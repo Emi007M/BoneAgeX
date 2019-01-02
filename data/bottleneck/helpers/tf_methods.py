@@ -169,8 +169,8 @@ def create_image_lists_from_prepared_dir(image_dir):
     result = {}
 
     image_dir_train = image_dir + '/train_augmented/'
-    image_dir_validate = image_dir + '/validate_augmented/'
-    image_dir_all = image_dir + '/all_not_augmented/'
+    image_dir_validate = image_dir + '/validate_not_augmented/'
+    image_dir_train_na = image_dir + '/train_not_augmented/' #not augmented
 
     print(image_dir_train)
 
@@ -180,7 +180,7 @@ def create_image_lists_from_prepared_dir(image_dir):
     sub_dirs1 = sub_dirs1[1:]
     sub_dirs2 = [x[0] for x in gfile.Walk(image_dir_validate)]
     sub_dirs2 = sub_dirs2[1:]
-    sub_dirs3 = [x[0] for x in gfile.Walk(image_dir_all)]
+    sub_dirs3 = [x[0] for x in gfile.Walk(image_dir_train_na)]
     sub_dirs3 = sub_dirs3[1:]
 
     print("count")
@@ -199,7 +199,7 @@ def create_image_lists_from_prepared_dir(image_dir):
             'training': [],
             'testing': [],
             'validation': [],
-            'all': []
+            'training_na': []
         }
 
 
@@ -209,7 +209,7 @@ def create_image_lists_from_prepared_dir(image_dir):
     # fill in image_lists with validation images
     result = fill_in_specified_set_with_labels(image_dir_validate, result, sub_dirs2, 'validation')
     # fill in image_lists with all training images
-    result = fill_in_specified_set_with_labels(image_dir_all, result, sub_dirs3, 'all')
+    result = fill_in_specified_set_with_labels(image_dir_train_na, result, sub_dirs3, 'training_na')
 
     return result
 
@@ -290,9 +290,9 @@ def get_image_path(image_lists, label_name, index, image_dir, category, is_for_b
         if category is 'training':
             category_folder = 'train_augmented/'
         elif category is 'validation':
-            category_folder = 'validate_augmented/'
-        elif category is 'all':
-            category_folder = 'all_not_augmented/'
+            category_folder = 'validate_not_augmented/'
+        elif category is 'training_na':
+            category_folder = 'train_not_augmented/'
         else:
             raise Exception("category " + category + " handling not implemented")
         sub_dir = category_folder + label_lists['dir']
@@ -597,7 +597,7 @@ def cache_bottlenecks(sess, image_lists, image_dir, bottleneck_dir,
     print("xxx")
     print(image_lists)
     for label_name, label_lists in image_lists.items():
-        for category in ['training', 'testing', 'validation', 'all']:
+        for category in ['training', 'testing', 'validation', 'training_na']:
             if len(label_lists[category]) == 0:
                 print("no images for " + category + ' for label ' + label_name)
                 continue
@@ -933,8 +933,8 @@ def get_or_create_image_lists(save_pickle_dir=FLAGS.bottleneck_dir):
         #                                  FLAGS.validation_percentage)
         image_lists = create_image_lists_from_prepared_dir(FLAGS.image_dir)
 
-        if not os.path.exists(FLAGS.bottleneck_dir):
-            os.makedirs(FLAGS.bottleneck_dir)
+        if not os.path.exists(save_pickle_dir):
+            os.makedirs(save_pickle_dir)
         with open(save_pickle_dir + '/image_list_division.pkl', 'wb') as output:
             pickle.dump(image_lists, output, pickle.HIGHEST_PROTOCOL)
     else:
