@@ -80,7 +80,6 @@ class Session:
             data_service.get_data_struct().reload_image_lists()
 
 
-
             for i in range(epoch_steps):
 
                 # get random data to train from data_struct
@@ -119,12 +118,12 @@ class Session:
                         self.writers['train_batch'].add_summary(summary, e * epoch_steps + i)
 
 
-                    if i % 1000 == 0:
-                        self.log.print_info("Saving model xx")
-                        self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
+                    # if i % 10000 == 0 and i is not 0:
+                    #     self.log.print_info("Saving model ")
+                    #     self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
 
             self.log.print_info("Saving model")
-            self.save_model(self.graph.x, MODEL_DIR + "ff/f"+str(e)+"/", CHECKPOINT_NAME)
+            self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
 
             self.log.print_info("Evaluations after epoch "+str(e))
 
@@ -137,11 +136,11 @@ class Session:
             summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
             self.writers['training_set'].add_summary(summary, e)
 
-        print("--final evals of last train step:")
-        # self.log.print_train_epoch(epochs, self.loss_val)
-        self.log.print_eval(self.eval_model(self.data))
-
-        self.print_plot()
+        # print("--final evals of last train step:")
+        # # self.log.print_train_epoch(epochs, self.loss_val)
+        # self.log.print_eval(self.eval_model(self.data))
+        #
+        # self.print_plot()
 
     def evaluate_data_graph(self, batch_size, type='training'):
 
@@ -303,7 +302,7 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
         sess.run(tf.global_variables_initializer())
 
         if not create_new:
-            model = load_model(MODEL_DIR+MODEL_TO_LOAD, CHECKPOINT_NAME)
+            model = load_model(MODEL_DIR_TO_LOAD, CHECKPOINT_NAME)
             graphModel = graph_struct.get_graph_ops(model)
 
 
@@ -331,7 +330,7 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
             # s.log.print_info("Evaluation for images from validation dataset")
             # s.log.print_eval(s.eval_model(s.data))
             s.log.print_info("Evaluation for both datasets")
-            # s.evaluate_data_graph(FLAGS.validation_batch_size, 'validation')
+            s.evaluate_data_graph(FLAGS.validation_batch_size, 'validation')
             s.evaluate_data_graph(FLAGS.validation_batch_size, 'training_na')
 
             # s.print_plot()
@@ -368,6 +367,17 @@ def handle_command_line_args():
     parser.add_option("-e", "--epochs", dest="epochs", help="amount of epochs", type="int", default=FLAGS.how_many_epochs)
     parser.add_option("-g", "--gpus", dest="gpus", help="amount of available GPUs", type="int", default=FLAGS.gpus)
     parser.add_option("-i", "--img_dir", dest="img_dir", help="input images dir", type="string", default=FLAGS.image_dir)
+
+    parser.add_option("-m", "--model_save_dir", dest="model_save_dir", help="dir for saving model", type="string", default=FLAGS.saved_model_dir)
+    parser.add_option("-l", "--model_load_dir", dest="model_load_dir", help="trained model dir", type="string", default=FLAGS.saved_model_dir)
+
+
+    parser.add_option("-n", "--new_model", dest="new_model", help="use for creating new model", action='store_true')
+    parser.add_option("-t", "--train", dest="train", help="use to train model", action='store_true')
+    parser.add_option("-s", "--save_model", dest="save_model", help="save model after training", action='store_true')
+    parser.add_option("-o", "--evaluate", dest="evaluate", help="use to evaluate model (to be used with importing model)", action='store_true')
+    parser.add_option("-z", "--use", dest="use", help="use to test reading input and model", action='store_true')
+
     (options, args) = parser.parse_args()
     FLAGS.train_batch_size = options.tra_batch
     FLAGS.validation_batch_size = options.val_batch
@@ -375,11 +385,22 @@ def handle_command_line_args():
     FLAGS.gpus = options.gpus
     FLAGS.image_dir = options.img_dir
 
+    MODEL_DIR = options.model_save_dir
+    MODEL_DIR_TO_LOAD = options.model_load_dir
+
+    N = options.new_model
+    T = options.train
+    S = options.save_model
+    O = options.evaluate
+    Z = options.use
+
+    return MODEL_DIR, MODEL_DIR_TO_LOAD, N, T, S, O, Z
+
 
 if __name__ == "__main__":
 
     MODEL_DIR = "trained_models/i/"
-    MODEL_TO_LOAD = "55000/"
+    MODEL_DIR_TO_LOAD = MODEL_DIR+"55000/"
     CHECKPOINT_NAME = "model"
     n_samples = 1000 # applicable only if data struct allows to generate a specified amount of data
     batch_size = 4
@@ -390,9 +411,15 @@ if __name__ == "__main__":
     FLAGS.how_many_epochs = 20
     FLAGS.gpus = 1
 
-    #FLAGS.create_bottlenecks = True
+    N = False
+    T = False
+    S = False
+    O = False
+    Z = True
 
-    handle_command_line_args()
+    # FLAGS.create_bottlenecks = True
+
+    MODEL_DIR, MODEL_DIR_TO_LOAD, N, T, S, O, Z = handle_command_line_args()
 
     data_service = DataService(DataType.Jpeg)
     data = data_service.get_data_struct().get_all_data(n_samples) # for data_bottleneck will be now None
@@ -416,7 +443,7 @@ if __name__ == "__main__":
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=True)
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=False)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=True)
-    main_model(data, graph_struct, create_new=True, train=True, save=True, evaluate=False, use=True)
+    main_model(data, graph_struct, create_new=N, train=T, save=S, evaluate=O, use=Z)
     # main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=True)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=False)
 

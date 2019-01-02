@@ -1,4 +1,4 @@
-from Lib.enum import Enum
+from enum import Enum
 from data.IData import Data
 from data.data_line import DataLine
 from data.data_sin import DataSin

@@ -1,4 +1,4 @@
-from Lib.enum import Enum
+from enum import Enum
 from graphs.IGraph import Graph
 from graphs.graph_linear import GraphLinear
 from graphs.graph_dense import GraphDense
