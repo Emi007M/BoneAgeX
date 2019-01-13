@@ -11,6 +11,8 @@ from data.bottleneck.helpers.tf_methods import unscaleAge
 from graphs.GraphService import GraphService, GraphType
 from utils.params_extractor import Flags
 
+import pickle
+
 FLAGS = Flags()
 
 # from termcolor import *
@@ -79,6 +81,12 @@ class Session:
             data_service.get_data_struct().reload_epoch_image_lists()
             data_service.get_data_struct().reload_image_lists()
 
+            # handling learning rate
+            last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
+                                                    patience, stagnation)
+
+            summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=self.loss_val, ), ])
+            self.writers['learning_rate'].add_summary(summary, e)
 
             for i in range(epoch_steps):
 
@@ -88,25 +96,6 @@ class Session:
 
                 if len(self.step_data.x) > 0:
                     [self.loss_val] = self.__train_model(self.step_data)
-
-                    # decreasing learning rate ---
-                    cooldown_cnt += 1
-                    if cooldown_cnt >= cooldown:
-                        if self.loss_val >= last_loss - epsilon:  # and res_loss <= last_loss + epsilon:
-                            stagnation += 1
-                            if stagnation >= patience:
-                                cooldown_cnt = 0
-                                stagnation = 0
-                                if lr > min_lr:
-                                    lr *= factor
-                                    lr = max(lr, min_lr)
-                                    self.graph.x.optimizer.lr = lr
-                                    print("new lr: "+str(lr))
-                        else:
-                            stagnation = 0
-                    last_loss = self.loss_val
-                    # --------
-
 
                     # logs
                     if i % 100 == 0:
@@ -128,7 +117,8 @@ class Session:
             self.log.print_info("Evaluations after epoch "+str(e))
 
             # self.log.print_eval(self.eval_model(self.data))
-            v_MAE = self.evaluate_data_graph(batch_size, 'validation')
+            v_MAE = self.evaluate_data_graph(batch_size, 'validation',
+                                             save_eval_to_files=True, eval_files=MODEL_DIR + ""+str(e)+"/evals_")
             summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
             self.writers['validation_set'].add_summary(summary, e)
 
@@ -142,13 +132,35 @@ class Session:
         #
         # self.print_plot()
 
-    def evaluate_data_graph(self, batch_size, type='training'):
+    def decrease_learning_rate(self, cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr, patience,
+                               stagnation):
+        # decreasing learning rate ---
+        cooldown_cnt += 1
+        if cooldown_cnt >= cooldown:
+            if self.loss_val >= last_loss - epsilon:  # and res_loss <= last_loss + epsilon:
+                stagnation += 1
+                if stagnation >= patience:
+                    cooldown_cnt = 0
+                    stagnation = 0
+                    if lr > min_lr:
+                        lr *= factor
+                        lr = max(lr, min_lr)
+                        self.graph.x.optimizer.lr = lr
+                        print("new lr: " + str(lr))
+            else:
+                stagnation = 0
+        last_loss = self.loss_val
+        return self.loss_val
+
+    def evaluate_data_graph(self, batch_size, type='training', save_eval_to_files=False, eval_files=None):
 
         self.log.print("starting evaluation of %s dataset " % type)
         data_service.get_data_struct().reload_epoch_image_lists()
         data_service.get_data_struct().reload_image_lists()
 
         epoch_steps = data_service.get_data_struct().count_steps_in_epoch(type=type, batch_size=batch_size)
+
+        evals_dict = {}
 
         whole_MAE = 0
 
@@ -158,12 +170,20 @@ class Session:
             self.step_data = data_service.get_data_struct().get_random_data(batch_size, type)
 
             if len(self.step_data.x) > 0:
-                step_eval_model = self.eval_model(self.step_data, False)
+                step_eval_model = self.eval_model(self.step_data, get_output=save_eval_to_files)
                 whole_MAE += step_eval_model.loss / epoch_steps
+
+                if save_eval_to_files:
+                    for s in range(len(self.step_data.x)):
+                        evals_dict[self.step_data.filenames[s]] = {"gt": unscaleAge(self.step_data.y[s])[0], "output": unscaleAge([step_eval_model.output[s]])[0]}
+
 
             print("\r%3d%% out of %5d (last step MAE: %10.8f)" %  ((i*100/epoch_steps), epoch_steps, step_eval_model.loss), end='')
 
         self.log.print("\r %10s MAE: %10.8f" % (type, whole_MAE), self.log.Styles.HEADER)
+
+        if save_eval_to_files:
+            save_evals(eval_files+"training", evals_dict)
 
         return whole_MAE
 
@@ -290,10 +310,14 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
         train_set_writer = tf.summary.FileWriter(
             TB_DIR + FLAGS.summaries_dir + '/train')
 
+        lr_writer = tf.summary.FileWriter(
+            TB_DIR + FLAGS.summaries_dir + '/learning_rate')
+
         writers = {
             'train_batch': train_writer,
             'validation_set': validation_set_writer,
-            'training_set': train_set_writer
+            'training_set': train_set_writer,
+            'learning_rate': lr_writer
         }
 
         merged = tf.summary.merge_all()
@@ -342,7 +366,9 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
             print("for expected values:")
             print(np.squeeze(unscaleAge(data.y[:10])))
             print("model calculated:")
-            print(s.use_model(data.x[:10], data.gender[:10]))
+            evals = s.use_model(data.x[:10], data.gender[:10])
+            print(evals)
+            return evals
 
 
 def load_model(dir, filename):
@@ -358,6 +384,20 @@ def load_model(dir, filename):
 
     return loaded_model
 
+def save_evals(file_path, item):
+    with open(file_path, 'wb') as fp:
+        pickle.dump(item, fp)
+    with open(file_path+'.txt', 'w') as f:
+        if type(item) is dict:
+            for i in item:
+                f.write("%s\t%s\t%s\n" % (i, item[i]["gt"], item[i]["output"]))
+        else:
+            for i in item:
+                f.write("%s\n" % i)
+
+def read_evals(file_path):
+    with open(file_path, 'rb') as fp:
+        return pickle.load(fp)
 
 def handle_command_line_args():
     usage = "usage: %prog [options] arg"
@@ -408,7 +448,7 @@ if __name__ == "__main__":
 
     CHECKPOINT_NAME = "model"
     n_samples = 1000 # applicable only if data struct allows to generate a specified amount of data
-    batch_size = 4
+    batch_size = 16
     # iterations = 1000
 
     FLAGS.validation_batch_size = batch_size

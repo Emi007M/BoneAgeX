@@ -91,6 +91,9 @@ class GraphBAAkerasJpeg(Graph):
         gender_input = Input(shape=[gender_size], name='GenderInput')
         inception_model = InceptionV3(include_top=False, input_shape=(500, 500, 3), weights='imagenet', pooling='max',
                                       input_tensor=jpeg_input)
+        # for layer in inception_model.layers:
+        #     layer.trainable = False
+
         bottleneck_input = inception_model.output
         # jpeg_data_tensor, decoded_image_tensor = add_jpeg_decoding(500, 500)
         # bottleneck_values = inception_model.predict(jpeg_input, batch_size=FLAGS.batch_size)

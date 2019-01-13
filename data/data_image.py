@@ -107,7 +107,7 @@ class DataImage(Data):
 
         bottleneck_rnd_test = BottlenecksRandomizer(dataset, image_lists)
         (train_bottlenecks,
-         train_ground_truth, _, _, train_genders) = get_random_cached_bottlenecks(
+         train_ground_truth, train_filenames, _, train_genders) = get_random_cached_bottlenecks(
             sess, bottleneck_rnd_test, amount,
             FLAGS.bottleneck_dir, FLAGS.image_dir, jpeg_data_tensor,
             decoded_image_tensor, resized_image_tensor, bottleneck_tensor,
@@ -136,7 +136,7 @@ class DataImage(Data):
         if len(train_ground_truth) > 0:
             train_ground_truth = np.reshape(train_ground_truth, (len(train_ground_truth), 1))
 
-        return Data(train_bottlenecks, train_ground_truth, train_genders)
+        return Data(train_bottlenecks, train_ground_truth, train_genders, train_filenames)
 
         # # x_data = np.arange(amount * 0.1, step=.1)
         # x_data = np.random.normal(0, 100, (amount, 3))

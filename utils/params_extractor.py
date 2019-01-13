@@ -8,9 +8,9 @@ class Flags(object):
             cls._instance = super(Flags, cls).__new__(cls, *args, **kwargs)
 
         name = '12'
-        # image_dir_folder = 'three_classes'
-        image_dir_folder = 'FM_labeled_train_validate'
-        #image_dir_folder = 'imgs'
+        #image_dir_folder = 'three_classes'
+        #image_dir_folder = 'FM_labeled_train_validate'
+        image_dir_folder = 'imgs_sm'
         epochs = 20
         create_bottlenecks = 0
         batch_size = 4 # ?
