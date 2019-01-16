@@ -56,21 +56,32 @@ class Session:
 
         self.writers = writers
 
-    def train_graph(self, epochs, batch_size):
+    def train_graph(self, epochs, batch_size, lr_drop):
 
-        # decreasing learning rate ---
-        factor = 0.8
-        patience = 10
-        epsilon = 0.0001
-        cooldown = 5
-        min_lr = 0.0001
+        # dodać is_inception_trainable / bottlenecks_instead_of_images
 
-        lr = 0.001
-        last_loss = 10000
-        cooldown_cnt = 0
-        stagnation = 0
-        # if self.graph.optimizer:
-        self.graph.x.optimizer.lr = 0.001
+        if lr_drop is 0:
+            lr_snapshot_drop = False
+            # decreasing learning rate ---
+            factor = 0.8
+            patience = 10
+            epsilon = 0.0001
+            cooldown = 5
+            min_lr = 0.0001
+
+            lr = 0.001
+            last_loss = 10000
+            cooldown_cnt = 0
+            stagnation = 0
+            # if self.graph.optimizer:
+            self.graph.x.optimizer.lr = 0.001
+        else:
+            lr_snapshot_drop = True
+            # snapshot cyclic cosine annealing
+            lr0 = 0.1
+            S = lr_drop #length of snapshot cyce in epochs
+            lr = lr0
+
         # ----
 
 
@@ -82,11 +93,15 @@ class Session:
             data_service.get_data_struct().reload_image_lists()
 
             # handling learning rate
-            last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
-                                                    patience, stagnation)
+            if lr_snapshot_drop:
+                lr = self.snapshot_lr(S, e, lr, lr0)
+            else:
+                last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
+                                        patience, stagnation)
 
-            summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=self.loss_val, ), ])
+            summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=lr, ), ])
             self.writers['learning_rate'].add_summary(summary, e)
+
 
             for i in range(epoch_steps):
 
@@ -111,14 +126,15 @@ class Session:
                     #     self.log.print_info("Saving model ")
                     #     self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
 
-            self.log.print_info("Saving model")
-            self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
+            if not lr_snapshot_drop or ((e+1) % S is 0):
+                self.log.print_info("Saving model")
+                self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
 
             self.log.print_info("Evaluations after epoch "+str(e))
 
             # self.log.print_eval(self.eval_model(self.data))
             v_MAE = self.evaluate_data_graph(batch_size, 'validation',
-                                             save_eval_to_files=True, eval_files=MODEL_DIR + ""+str(e)+"/evals_")
+                                             save_eval_to_files=True, eval_files=MODEL_DIR + ""+str(e)+"/")
             summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
             self.writers['validation_set'].add_summary(summary, e)
 
@@ -131,6 +147,11 @@ class Session:
         # self.log.print_eval(self.eval_model(self.data))
         #
         # self.print_plot()
+
+    def snapshot_lr(self, S, e, lr, lr0):
+        lr = lr0 / 2 * (np.cos((np.pi * np.mod(e, S)) / (S)) + 1)
+        self.graph.x.optimizer.lr = lr
+        return lr
 
     def decrease_learning_rate(self, cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr, patience,
                                stagnation):
@@ -151,6 +172,8 @@ class Session:
                 stagnation = 0
         last_loss = self.loss_val
         return self.loss_val
+
+
 
     def evaluate_data_graph(self, batch_size, type='training', save_eval_to_files=False, eval_files=None):
 
@@ -183,7 +206,7 @@ class Session:
         self.log.print("\r %10s MAE: %10.8f" % (type, whole_MAE), self.log.Styles.HEADER)
 
         if save_eval_to_files:
-            save_evals(eval_files+"training", evals_dict)
+            save_evals(eval_files, "evals_"+"training", evals_dict)
 
         return whole_MAE
 
@@ -289,7 +312,7 @@ class Session:
         # return x.size
         return len(x[0])
 
-def main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=False):
+def main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=False, lr_drop=0):
     tf.reset_default_graph()
 
     # -- start session
@@ -340,7 +363,7 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
         if train:
             s.log.print_info("Training started (batch size: %d, GPUs: %d, max epochs: %d)" %
                              (FLAGS.train_batch_size, FLAGS.gpus, FLAGS.how_many_epochs))
-            s.train_graph(FLAGS.how_many_epochs, FLAGS.train_batch_size)
+            s.train_graph(FLAGS.how_many_epochs, FLAGS.train_batch_size, lr_drop)
             #data_service.get_data_struct().reload_epoch_image_lists() # do after every epoch
 
         if save:
@@ -384,10 +407,13 @@ def load_model(dir, filename):
 
     return loaded_model
 
-def save_evals(file_path, item):
-    with open(file_path, 'wb') as fp:
+def save_evals(file_path, file_name, item):
+    # create dir if not exists
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+    with open(file_path+file_name, 'wb') as fp:
         pickle.dump(item, fp)
-    with open(file_path+'.txt', 'w') as f:
+    with open(file_path+file_name+'.txt', 'w') as f:
         if type(item) is dict:
             for i in item:
                 f.write("%s\t%s\t%s\n" % (i, item[i]["gt"], item[i]["output"]))
@@ -419,6 +445,9 @@ def handle_command_line_args():
     parser.add_option("-o", "--evaluate", dest="evaluate", help="use to evaluate model (to be used with importing model)", action='store_true')
     parser.add_option("-z", "--use", dest="use", help="use to test reading input and model", action='store_true')
 
+
+    parser.add_option("-r", "--lr_drop", dest="lr_drop", help="if 0 lr drops steadily, if larger - drops in cyclic cosine annealing manner for snapshot per number of epochs", type="int", default=100)
+
     (options, args) = parser.parse_args()
     FLAGS.train_batch_size = options.tra_batch
     FLAGS.validation_batch_size = options.val_batch
@@ -435,8 +464,9 @@ def handle_command_line_args():
     S = options.save_model
     O = options.evaluate
     Z = options.use
+    LR_DROP = options.lr_drop
 
-    return MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z
+    return MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z, LR_DROP
 
 
 if __name__ == "__main__":
@@ -464,7 +494,17 @@ if __name__ == "__main__":
 
     # FLAGS.create_bottlenecks = True
 
-    MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z = handle_command_line_args()
+    MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z, LR_DROP = handle_command_line_args()
+
+
+    # #options manually overriding args
+    # N = True
+    # T = True
+    # MODEL_DIR = "trained_models/saving_test_sn_epochs/"
+    # FLAGS.image_dir = "C:/Users/Emilia/Pycharm Projects/BoneAge/training_dataset/imgs_sm"
+    # #FLAGS.image_dir = "C:/Users/Emilia/Pycharm Projects/BoneAge/training_dataset/FM_labeled_train_validate"
+    # LR_DROP = 5
+
 
     if not os.path.exists(TB_DIR):
         os.makedirs(TB_DIR)
@@ -491,9 +531,45 @@ if __name__ == "__main__":
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=True)
     # main_model(data, create_new=False, train=False, save=False, evaluate=True, use=False)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=True)
-    main_model(data, graph_struct, create_new=N, train=T, save=S, evaluate=O, use=Z)
+    main_model(data, graph_struct, create_new=N, train=T, save=S, evaluate=O, use=Z, lr_drop=LR_DROP)
     # main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=True)
     # main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=True, use=False)
+
+    # x = []
+    # x.append([130.93224, 128.6378, 129.80742, 129.99046, 129.19624, 129.46765, 128.52744, 134.57977, 135.84741, 128.91914])
+    # x.append([118.54085, 117.13107, 118.11336, 118.27703,  117.18795,  117.035736, 118.32126,  117.72592,  117.335464, 118.73112])
+    # x.append([126.884766, 125.765366, 125.21182, 125.356064, 125.67647, 125.27998, 126.10977, 125.253265, 125.13985, 130.3324])
+    #
+    # np.mean(x, 0)
+
+    ##if using multiple models
+    # d = "trained_models/i/"
+    #
+    # models_to_use = [d+'8000/', d+'19000/', d+'30000/']
+    # evaluations = []
+    #
+    # g = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+    # maes = []
+    # for model in models_to_use:
+    #     MODEL_DIR_TO_LOAD = model
+    #     evaluation = main_model(data, graph_struct, create_new=False, train=False, save=False, evaluate=False, use=True)
+    #     save_evals(model + "evals.txt", evaluation.tolist())
+    #     evaluations.append(evaluation.tolist())
+    #
+    #     maes.append(np.mean(np.subtract(evaluation.tolist(),g)))
+    #
+    # print(evaluations)
+    # mean_evaluations = np.mean(evaluations, 0)
+    # print("mean evals:")
+    # print(mean_evaluations)
+    #
+    # print("maes:")
+    # print(maes)
+    # print("mean mae:")
+    # print(np.mean(np.subtract(mean_evaluations,g)))
+
+
+
 
 # trainingData - to prepare train and validation sets of images in 2 folders with saved gender in file names
 # bottleneck_maker (from train3) - can be used to produce bottlenecks from previously prepared divided images

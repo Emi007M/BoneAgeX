@@ -11,7 +11,7 @@ class Flags(object):
         #image_dir_folder = 'three_classes'
         #image_dir_folder = 'FM_labeled_train_validate'
         image_dir_folder = 'imgs_sm'
-        epochs = 20
+        epochs = 500
         create_bottlenecks = 0
         batch_size = 4 # ?
 
