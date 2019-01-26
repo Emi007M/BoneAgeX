@@ -1,0 +1,26 @@
+from setuptools import setup, find_packages
+setup(
+    name="BoneAge",
+    version="0.1",
+    packages=find_packages(),
+    install_requires=[
+        'pip==9.0.1',
+        'keras',
+        'pillow',
+        'pillow-pil',
+        'cv2wrap',
+        'matplotlib',
+        'h5py',
+        'numpy',
+        'opencv-python',
+        'scipy',
+        'setuptools',
+        'tensorboard==1.6.0',
+        'tensorflow==1.6.0',
+        'tensorflow-gpu==1.6.0',
+        'termcolor',
+        'colorama',
+        'protobuf==3.6.1',
+        'absl-py==0.6.1',
+      ],
+)
