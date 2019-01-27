@@ -139,9 +139,9 @@ class Session:
                     #     self.log.print_info("Saving model ")
                     #     self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
 
-            if not lr_snapshot_drop or ((e * epoch_steps + i + 1) % S is 0):
-                self.log.print_info("Saving model")
-                self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
+                if not lr_snapshot_drop or ((e * epoch_steps + i + 1) % S is 0):
+                    self.log.print_info("Saving model")
+                    self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
 
             self.log.print_info("Evaluations after epoch "+str(e))
 
