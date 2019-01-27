@@ -104,9 +104,6 @@ class Session:
             #     last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
             #                             patience, stagnation)
 
-            summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=lr, ), ])
-            self.writers['learning_rate'].add_summary(summary, e * epoch_steps + i)
-
 
             for i in range(epoch_steps):
 
@@ -121,6 +118,8 @@ class Session:
                 # get random data to train from data_struct
                 self.step_data = data_service.get_data_struct().get_random_data(batch_size)
 
+                summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=lr, ), ])
+                self.writers['learning_rate'].add_summary(summary, e * epoch_steps + i)
 
                 if len(self.step_data.x) > 0:
                     [self.loss_val] = self.__train_model(self.step_data)
