@@ -138,21 +138,42 @@ class Session:
                     #     self.log.print_info("Saving model ")
                     #     self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
 
-                if not lr_snapshot_drop or ((e * epoch_steps + i + 1) % S is 0):
+                overal_iteration = e * epoch_steps + i
+                real_epoch = int(overal_iteration / (int(epoch_steps/32)))
+
+                if lr_snapshot_drop and ((overal_iteration + 1) % S is 0):
                     self.log.print_info("Saving model")
-                    self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
+                    self.save_model(self.graph.x, MODEL_DIR + ""+str()+"/", CHECKPOINT_NAME)
+                    v_MAE = self.evaluate_data_graph(batch_size, 'validation',
+                                                     save_eval_to_files=True, eval_files=MODEL_DIR + "c" + str(overal_iteration) + "/")
+
+                if not lr_snapshot_drop and ((overal_iteration + 1) % int(epoch_steps/32) is 0):
+                    self.log.print_info("Saving model")
+                    self.save_model(self.graph.x, MODEL_DIR + ""+str(overal_iteration)+"/", CHECKPOINT_NAME)
+
+                if  ((overal_iteration + 1) % int(epoch_steps / 32) is 0):
+                    v_MAE = self.evaluate_data_graph(batch_size, 'validation',
+                                                     save_eval_to_files=True,
+                                                     eval_files=MODEL_DIR + "" + str(real_epoch) + "/")
+                    summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
+                    self.writers['validation_set'].add_summary(summary, real_epoch)
+
+                    t_MAE = self.evaluate_data_graph(batch_size, 'training_na')
+                    summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
+                    self.writers['training_set'].add_summary(summary, real_epoch)
+
 
             self.log.print_info("Evaluations after epoch "+str(e))
 
             # self.log.print_eval(self.eval_model(self.data))
-            v_MAE = self.evaluate_data_graph(batch_size, 'validation',
-                                             save_eval_to_files=True, eval_files=MODEL_DIR + ""+str(e)+"/")
-            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
-            self.writers['validation_set'].add_summary(summary, e)
-
-            t_MAE = self.evaluate_data_graph(batch_size, 'training_na')
-            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
-            self.writers['training_set'].add_summary(summary, e)
+            # v_MAE = self.evaluate_data_graph(batch_size, 'validation',
+            #                                  save_eval_to_files=True, eval_files=MODEL_DIR + ""+str(e)+"/")
+            # summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
+            # self.writers['validation_set'].add_summary(summary, e)
+            #
+            # t_MAE = self.evaluate_data_graph(batch_size, 'training_na')
+            # summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
+            # self.writers['training_set'].add_summary(summary, e)
 
         # print("--final evals of last train step:")
         # # self.log.print_train_epoch(epochs, self.loss_val)
