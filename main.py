@@ -143,7 +143,7 @@ class Session:
 
                 if lr_snapshot_drop and ((overal_iteration + 1) % S is 0):
                     self.log.print_info("Saving model")
-                    self.save_model(self.graph.x, MODEL_DIR + ""+str()+"/", CHECKPOINT_NAME)
+                    self.save_model(self.graph.x, MODEL_DIR + "c"+str(overal_iteration)+"/", CHECKPOINT_NAME)
                     v_MAE = self.evaluate_data_graph(batch_size, 'validation',
                                                      save_eval_to_files=True, eval_files=MODEL_DIR + "c" + str(overal_iteration) + "/")
 
