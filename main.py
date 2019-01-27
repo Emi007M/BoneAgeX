@@ -90,7 +90,8 @@ class Session:
         epoch_steps = data_service.get_data_struct().count_steps_in_epoch(type='training', batch_size=batch_size)
 
         if lr_snapshot_drop:
-            S = epoch_steps*epochs/lr_drop
+            S = int(epoch_steps*epochs/lr_drop)
+            print("!!! S:" + str(S))
 
         for e in range(epochs):
             self.log.print_warning("starting epoch " + str(e))
