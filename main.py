@@ -151,7 +151,8 @@ class Session:
                     self.log.print_info("Saving model")
                     self.save_model(self.graph.x, MODEL_DIR + ""+str(overal_iteration)+"/", CHECKPOINT_NAME)
 
-                if  ((overal_iteration + 1) % int(epoch_steps / 32) is 0):
+                if ((overal_iteration + 1) % int(epoch_steps / 32) is 0):
+                    self.log.print_info("Evaluations after epoch " + str(real_epoch))
                     v_MAE = self.evaluate_data_graph(batch_size, 'validation',
                                                      save_eval_to_files=True,
                                                      eval_files=MODEL_DIR + "" + str(real_epoch) + "/")
@@ -163,7 +164,7 @@ class Session:
                     self.writers['training_set'].add_summary(summary, real_epoch)
 
 
-            self.log.print_info("Evaluations after epoch "+str(e))
+
 
             # self.log.print_eval(self.eval_model(self.data))
             # v_MAE = self.evaluate_data_graph(batch_size, 'validation',
