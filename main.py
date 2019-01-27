@@ -105,7 +105,7 @@ class Session:
             #                             patience, stagnation)
 
             summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=lr, ), ])
-            self.writers['learning_rate'].add_summary(summary, e)
+            self.writers['learning_rate'].add_summary(summary, e * epoch_steps + i)
 
 
             for i in range(epoch_steps):
