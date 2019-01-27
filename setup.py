@@ -11,6 +11,8 @@ setup(
         'setuptools',
         'tensorboard==1.12.2',
         'tensorflow==1.12.0',
-        'colorama'
+        'colorama',
+        'pillow',
+        'pillow-pip'
     ]
 )

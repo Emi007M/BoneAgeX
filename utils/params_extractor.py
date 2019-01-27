@@ -11,9 +11,9 @@ class Flags(object):
         #image_dir_folder = 'three_classes'
         #image_dir_folder = 'FM_labeled_train_validate'
         image_dir_folder = 'imgs_sm'
-        epochs = 500
+        epochs = 16
         create_bottlenecks = 0
-        batch_size = 4 # ?
+        batch_size = 16 # ?
 
         d = 'C:/Users/Emilia/Pycharm Projects/BoneAge/'
 

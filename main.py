@@ -81,7 +81,7 @@ class Session:
             lr_snapshot_drop = True
             # snapshot cyclic cosine annealing
             lr0 = 0.1
-            S = lr_drop #length of snapshot cyce in epochs
+            //S = lr_drop #amount of snapshot cycles
             lr = lr0
 
         # ----
@@ -89,23 +89,34 @@ class Session:
 
         epoch_steps = data_service.get_data_struct().count_steps_in_epoch(type='training', batch_size=batch_size)
 
+        if lr_snapshot_drop:
+            S = epoch_steps*epochs/lr_drop
+
         for e in range(epochs):
             self.log.print_warning("starting epoch " + str(e))
             data_service.get_data_struct().reload_epoch_image_lists()
             data_service.get_data_struct().reload_image_lists()
 
-            # handling learning rate
-            if lr_snapshot_drop:
-                lr = self.snapshot_lr(S, e, lr, lr0)
-            else:
-                last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
-                                        patience, stagnation)
+            # # handling learning rate
+            # if lr_snapshot_drop:
+            #     lr = self.snapshot_lr(S, e*epoch_steps+i, lr, lr0)
+            # else:
+            #     last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr, min_lr,
+            #                             patience, stagnation)
 
             summary = tf.Summary(value=[tf.Summary.Value(tag="learning_rate", simple_value=lr, ), ])
             self.writers['learning_rate'].add_summary(summary, e)
 
 
             for i in range(epoch_steps):
+
+                # handling learning rate
+                if lr_snapshot_drop:
+                    lr = self.snapshot_lr(S, e * epoch_steps + i, lr0)
+                else:
+                    last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr,
+                                                            min_lr,
+                                                            patience, stagnation)
 
                 # get random data to train from data_struct
                 self.step_data = data_service.get_data_struct().get_random_data(batch_size)
@@ -128,7 +139,7 @@ class Session:
                     #     self.log.print_info("Saving model ")
                     #     self.save_model(self.graph.x, MODEL_DIR + ""+str(i)+"/", CHECKPOINT_NAME)
 
-            if not lr_snapshot_drop or ((e+1) % S is 0):
+            if not lr_snapshot_drop or ((e * epoch_steps + i + 1) % S is 0):
                 self.log.print_info("Saving model")
                 self.save_model(self.graph.x, MODEL_DIR + ""+str(e)+"/", CHECKPOINT_NAME)
 
@@ -150,8 +161,14 @@ class Session:
         #
         # self.print_plot()
 
-    def snapshot_lr(self, S, e, lr, lr0):
-        lr = lr0 / 2 * (np.cos((np.pi * np.mod(e, S)) / (S)) + 1)
+    def snapshot_lr(self, S, t, lr0=0.1):
+        """
+        :param S: length of single cycle in iterations
+        :param t: overal iteration
+        :param lr0: initial learning rate
+        :return: updated learning rate
+        """
+        lr = lr0 / 2 * (np.cos((np.pi * np.mod(t, S)) / (S)) + 1)
         self.graph.x.optimizer.lr = lr
         return lr
 
@@ -448,7 +465,7 @@ def handle_command_line_args():
     parser.add_option("-z", "--use", dest="use", help="use to test reading input and model", action='store_true')
 
 
-    parser.add_option("-r", "--lr_drop", dest="lr_drop", help="if 0 lr drops steadily, if larger - drops in cyclic cosine annealing manner for snapshot per number of epochs", type="int", default=100)
+    parser.add_option("-r", "--lr_drop", dest="lr_drop", help="if 0 lr drops steadily, if larger - drops in cyclic cosine annealing manner for snapshot", type="int", default=5)
 
     (options, args) = parser.parse_args()
     FLAGS.train_batch_size = options.tra_batch
