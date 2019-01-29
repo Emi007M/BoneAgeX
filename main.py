@@ -241,7 +241,7 @@ class Session:
                         evals_dict[self.step_data.filenames[s]] = {"gt": unscaleAge(self.step_data.y[s])[0], "output": unscaleAge([step_eval_model.output[s]])[0]}
 
 
-            print("\r%3d%% out of %5d (last step MAE: %10.8f)" %  ((i*100/epoch_steps), epoch_steps, step_eval_model.loss), end='')
+            #print("\r%3d%% out of %5d (last step MAE: %10.8f)" %  ((i*100/epoch_steps), epoch_steps, step_eval_model.loss), end='')
 
         self.log.print("\r %10s MAE: %10.8f" % (type, whole_MAE), self.log.Styles.HEADER)
 
