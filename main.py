@@ -111,9 +111,9 @@ class Session:
                 if lr_snapshot_drop:
                     lr = self.snapshot_lr(S, e * epoch_steps + i, lr0)
                 else:
-                    last_loss = self.decrease_learning_rate(cooldown, cooldown_cnt, epsilon, factor, last_loss, lr,
-                                                            min_lr,
-                                                            patience, stagnation)
+                    last_loss, stagnation, last_loss, cooldown_cnt = self.decrease_learning_rate(
+                        cooldown, cooldown_cnt, epsilon, factor, last_loss, lr,
+                        min_lr, patience, stagnation)
 
                 # get random data to train from data_struct
                 self.step_data = data_service.get_data_struct().get_random_data(batch_size)
@@ -211,15 +211,15 @@ class Session:
             else:
                 stagnation = 0
         last_loss = self.loss_val
-        return self.loss_val
+        return self.loss_val, stagnation, last_loss, cooldown_cnt
 
 
 
     def evaluate_data_graph(self, batch_size, type='training', save_eval_to_files=False, eval_files=None):
 
         self.log.print("starting evaluation of %s dataset " % type)
-        data_service.get_data_struct().reload_epoch_image_lists()
-        data_service.get_data_struct().reload_image_lists()
+        #data_service.get_data_struct().reload_epoch_image_lists()
+        # data_service.get_data_struct().reload_image_lists()
 
         epoch_steps = data_service.get_data_struct().count_steps_in_epoch(type=type, batch_size=batch_size)
 
@@ -230,7 +230,7 @@ class Session:
         for i in range(epoch_steps):
 
             # get random data  from data_struct
-            self.step_data = data_service.get_data_struct().get_random_data(batch_size, type)
+            self.step_data = data_service.get_data_struct().get_random_data(batch_size, type, "l")
 
             if len(self.step_data.x) > 0:
                 step_eval_model = self.eval_model(self.step_data, get_output=save_eval_to_files)
@@ -247,6 +247,8 @@ class Session:
 
         if save_eval_to_files:
             save_evals(eval_files, "evals_"+"training", evals_dict)
+
+        data_service.get_data_struct().reload_image_lists()
 
         return whole_MAE
 

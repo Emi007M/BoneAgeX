@@ -89,10 +89,15 @@ class DataImage(Data):
             return None
         return self.__get_data(-1, self.image_lists, 'validation')
 
-    def get_random_data(self, batch_size, type='training'):
+    def get_random_data(self, batch_size, type='training', list = "e"):
+        image_list = []
+        if list is "e":
+            image_list = self.epoch_image_lists
+        else:
+            image_list = self.image_lists
         if self.sess is None:
             return None
-        return self.__get_data(batch_size, self.epoch_image_lists, type)
+        return self.__get_data(batch_size, image_list, type)
 
     def __get_data(self, amount, image_lists, dataset='training'):
         #dataset 'training'/'validation'
