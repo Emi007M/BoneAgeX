@@ -145,7 +145,7 @@ class Session:
                     self.log.print_info("Saving model")
                     self.save_model(self.graph.x, MODEL_DIR + "c"+str(overal_iteration)+"/", CHECKPOINT_NAME)
                     v_MAE = self.evaluate_data_graph(batch_size, 'validation',
-                                                     save_eval_to_files=True, eval_files=MODEL_DIR + "c" + str(overal_iteration) + "/")
+                                                     save_eval_to_files=True, eval_files=MODEL_DIR + "" + str(overal_iteration) + "c/", eval_name="eval_validation")
 
                 if not lr_snapshot_drop and ((overal_iteration + 1) % int(epoch_steps/32) is 0):
                     self.log.print_info("Saving model")
@@ -155,11 +155,14 @@ class Session:
                     self.log.print_info("Evaluations after epoch " + str(real_epoch))
                     v_MAE = self.evaluate_data_graph(batch_size, 'validation',
                                                      save_eval_to_files=True,
-                                                     eval_files=MODEL_DIR + "" + str(real_epoch) + "/")
+                                                     eval_files=MODEL_DIR + "" + str(overal_iteration) + "e/", eval_name="eval_validation")
                     summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=v_MAE, ), ])
                     self.writers['validation_set'].add_summary(summary, real_epoch)
 
-                    t_MAE = self.evaluate_data_graph(batch_size, 'training_na')
+                    t_MAE = self.evaluate_data_graph(batch_size, 'training_na',
+                                                     save_eval_to_files=True,
+                                                     eval_files=MODEL_DIR + "" + str(overal_iteration) + "e/",
+                                                     eval_name="eval_training_na")
                     summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=t_MAE, ), ])
                     self.writers['training_set'].add_summary(summary, real_epoch)
 
@@ -215,7 +218,7 @@ class Session:
 
 
 
-    def evaluate_data_graph(self, batch_size, type='training', save_eval_to_files=False, eval_files=None):
+    def evaluate_data_graph(self, batch_size, type='training', save_eval_to_files=False, eval_files=None, eval_name=None):
 
         self.log.print("starting evaluation of %s dataset " % type)
         #data_service.get_data_struct().reload_epoch_image_lists()
@@ -238,7 +241,7 @@ class Session:
 
                 if save_eval_to_files:
                     for s in range(len(self.step_data.x)):
-                        evals_dict[self.step_data.filenames[s]] = {"gt": unscaleAge(self.step_data.y[s])[0], "output": unscaleAge([step_eval_model.output[s]])[0]}
+                        evals_dict[self.step_data.filenames[s]] = {"gt": unscaleAge(self.step_data.y[s])[0], "output": [step_eval_model.output[s]]}
 
 
             #print("\r%3d%% out of %5d (last step MAE: %10.8f)" %  ((i*100/epoch_steps), epoch_steps, step_eval_model.loss), end='')
@@ -246,7 +249,7 @@ class Session:
         self.log.print("\r %10s MAE: %10.8f" % (type, whole_MAE), self.log.Styles.HEADER)
 
         if save_eval_to_files:
-            save_evals(eval_files, "evals_"+"training", evals_dict)
+            save_evals(eval_files, eval_name, evals_dict)
 
         data_service.get_data_struct().reload_image_lists()
 

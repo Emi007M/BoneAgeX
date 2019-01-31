@@ -9,8 +9,8 @@ setup(
         'matplotlib',
         'numpy',
         'setuptools',
-        'tensorboard==1.12.2',
-        'tensorflow==1.12.0',
+        'tensorboard',
+        'tensorflow',
         'colorama',
         'pillow',
         'pillow-pip'
