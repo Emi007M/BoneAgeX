@@ -8,14 +8,16 @@ import tensorflow as tf
 from keras.models import model_from_json
 
 from data.DataService import DataService, DataType
+from data.IData import Data
 from data.bottleneck.BottleneckRepository import extract_genders
-from data.bottleneck.helpers.tf_methods import unscaleAge
+from data.bottleneck.helpers.tf_methods import unscaleAge, get_image_file_from_path
 from graphs.GraphService import GraphService, GraphType
 from utils.params_extractor import Flags
 
 import pickle
 
 FLAGS = Flags()
+CHECKPOINT_NAME = "model"
 
 # from termcolor import *
 # import colorama
@@ -347,6 +349,9 @@ class Session:
 
         output = graph.x.predict_on_batch(
             {'GenderInput': gender_input, 'JpegInput': input})
+        # with graph.x.as_default():
+        #     output = m.predict_on_batch(
+        #         {'GenderInput': gender_input, 'JpegInput': input})
 
         return np.squeeze(output)
 
@@ -357,7 +362,7 @@ class Session:
         # return x.size
         return len(x[0])
 
-def main_model(data, graph_struct, create_new=False, train=True, save=True, evaluate=False, use=False, lr_drop=0):
+def main_model(data, graph_struct, model_dir=None, create_new=False, train=True, save=True, evaluate=False, use=False, lr_drop=0):
     tf.reset_default_graph()
 
     # -- start session
@@ -369,34 +374,37 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
 
 
         # init tensorboard
-        train_writer = tf.summary.FileWriter(TB_DIR + FLAGS.summaries_dir + '/train_batch',
-                                             sess.graph)
+        writers = {}
+        if train or evaluate:
+            train_writer = tf.summary.FileWriter(TB_DIR + FLAGS.summaries_dir + '/train_batch',
+                                                 sess.graph)
 
-        validation_set_writer = tf.summary.FileWriter(
-            TB_DIR + FLAGS.summaries_dir + '/validation')
+            validation_set_writer = tf.summary.FileWriter(
+                TB_DIR + FLAGS.summaries_dir + '/validation')
 
-        train_set_writer = tf.summary.FileWriter(
-            TB_DIR + FLAGS.summaries_dir + '/train')
+            train_set_writer = tf.summary.FileWriter(
+                TB_DIR + FLAGS.summaries_dir + '/train')
 
-        lr_writer = tf.summary.FileWriter(
-            TB_DIR + FLAGS.summaries_dir + '/learning_rate')
+            lr_writer = tf.summary.FileWriter(
+                TB_DIR + FLAGS.summaries_dir + '/learning_rate')
 
-        writers = {
-            'train_batch': train_writer,
-            'validation_set': validation_set_writer,
-            'training_set': train_set_writer,
-            'learning_rate': lr_writer
-        }
+            writers = {
+                'train_batch': train_writer,
+                'validation_set': validation_set_writer,
+                'training_set': train_set_writer,
+                'learning_rate': lr_writer
+            }
 
-        merged = tf.summary.merge_all()
+            merged = tf.summary.merge_all()
+
 
         # -- init graph
         sess.run(tf.global_variables_initializer())
 
         if not create_new:
-            model = load_model(MODEL_DIR_TO_LOAD, CHECKPOINT_NAME)
+            # model = load_model(MODEL_DIR_TO_LOAD, CHECKPOINT_NAME)
+            model = load_model(model_dir, CHECKPOINT_NAME)
             graphModel = graph_struct.get_graph_ops(model)
-
 
         if data is None:
             data_service.get_data_struct().init_sess(sess, graph_struct)
@@ -431,10 +439,11 @@ def main_model(data, graph_struct, create_new=False, train=True, save=True, eval
             s.log.print_info("Using graph")
             # print(np.transpose(data.x[0]))
             # print(s.use_model(np.transpose(data.x[:10]), np.transpose(data.gender[:10])))
-            print("for expected values:")
-            print(np.squeeze(unscaleAge(data.y[:10])))
+            # print("for expected values:")
+            # print(np.squeeze(unscaleAge(data.y[:10])))
             print("model calculated:")
-            evals = s.use_model(data.x[:10], data.gender[:10])
+            # evals = s.use_model(data.x[:10], data.gender[:10])
+            evals = s.use_model(data.x, data.gender)
             print(evals)
             return evals
 
@@ -514,6 +523,8 @@ def handle_command_line_args():
     return MODEL_DIR, MODEL_DIR_TO_LOAD, TB_DIR, N, T, S, O, Z, LR_DROP
 
 
+
+
 if __name__ == "__main__":
 
     MODEL_DIR = "trained_models/"
@@ -521,7 +532,7 @@ if __name__ == "__main__":
     TB_DIR = "tensorboard_logs/"
 
 
-    CHECKPOINT_NAME = "model"
+
     n_samples = 1000 # applicable only if data struct allows to generate a specified amount of data
     batch_size = 16
     # iterations = 1000
@@ -612,7 +623,6 @@ if __name__ == "__main__":
     # print(maes)
     # print("mean mae:")
     # print(np.mean(np.subtract(mean_evaluations,g)))
-
 
 
 

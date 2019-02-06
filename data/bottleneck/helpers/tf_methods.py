@@ -494,6 +494,12 @@ def get_image_file(category, image_dir, image_lists, index, label_name):
     #     image_path = 'train_augmented/' + image_path
     # else: #'validation', could be also 'testing'
     #     image_path = 'validate_augmented/' + image_path
+    image_data = get_image_file_from_path(image_path)
+
+    return image_data, image_path
+
+
+def get_image_file_from_path(image_path):
     if not gfile.Exists(image_path):
         tf.logging.fatal('File does not exist %s', image_path)
     # image_data = gfile.FastGFile(image_path, 'rb').read()
@@ -501,7 +507,7 @@ def get_image_file(category, image_dir, image_lists, index, label_name):
     image_data = image.img_to_array(image_data, data_format='channels_last')
     image_data = np.expand_dims(image_data, axis=0)
     image_data = preprocess_input(image_data)
-    return image_data, image_path
+    return image_data
 
 
 def get_or_create_bottleneck(sess, image_lists, label_name, index, image_dir,
@@ -711,6 +717,47 @@ def get_random_cached_bottlenecks(sess, bottleneck_rnd: BottlenecksRandomizer, h
                 filenames.append(image_name)
 
                 genders.append(1 if os.path.basename(image_name)[0] is 'M' else 0)
+    # print("genders")
+    # print(genders)
+    # genders = np.asarray(genders).reshape(len(genders),1)
+    # # genders = np.transpose(genders)
+    # print(genders)
+    return bottlenecks, ground_truths, filenames, bottleneck_rnd.image_lists, genders
+
+
+
+
+
+def get_images_as_data_for_evaluation(dir, image_list = [], gender_list = []):
+
+
+    images = []
+    ground_truths = []
+    filenames = []
+    genders = []
+
+    if image_list is []:
+        image_list = [x[0] for x in gfile.Walk(dir)]
+        print(image_list)
+        image_list = image_list[1:]
+
+
+    # Retrieve all bottlenecks.
+    for label_index, label_name in enumerate(bottleneck_rnd.image_lists.keys()):
+        for image_index, image_name in enumerate(
+                bottleneck_rnd.image_lists[label_name][bottleneck_rnd.category]):
+            image_name = get_image_path(bottleneck_rnd.image_lists, label_name, image_index,
+                                        image_dir, bottleneck_rnd.category)
+
+
+            image_data, _ = get_image_file(bottleneck_rnd.category, image_dir, bottleneck_rnd.image_lists,
+                                           image_index, label_name)
+            bottlenecks.append(image_data)
+
+            ground_truths.append(scaleAge(label_name)) # was label_index
+            filenames.append(image_name)
+
+            genders.append(1 if os.path.basename(image_name)[0] is 'M' else 0)
     # print("genders")
     # print(genders)
     # genders = np.asarray(genders).reshape(len(genders),1)
