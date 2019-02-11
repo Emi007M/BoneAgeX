@@ -82,7 +82,7 @@ class Session:
         else:
             lr_snapshot_drop = True
             # snapshot cyclic cosine annealing
-            lr0 = 0.01
+            lr0 = 0.05
             #S = lr_drop #amount of snapshot cycles
             lr = lr0
 
