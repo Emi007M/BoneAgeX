@@ -91,10 +91,11 @@ def get_images_from_file(csv_path):
 # dir = "C:/Users/Emilia/Pycharm Projects/BoneAge/training_dataset/imgs_sm/validate_not_augmented/108"
 # imgs = ["M_42_6839368.jpeg", "M_58_5642036.jpeg", "M_11_9161997.jpeg", "M_30_2021571.jpeg"]
 #
-dir = "M:/Desktop/baa-tests/t2"
+# dir = "M:/Desktop/baa-tests/t2"
+dir = "M:/Desktop/testy"
 
-dirpath = os.getcwd()
-dir = dirpath
+# dirpath = os.getcwd()
+# dir = dirpath
 
 if os.path.isfile(dir + "/descr.csv"):
     imgs, genders = get_images_from_file(dir + "/descr.csv")
@@ -116,11 +117,14 @@ graph_struct = graph_service.get_graph_struct(500 * 500 * 3, 1)
 models_to_use = [
     # "M:/Desktop/ssh/trained_models/fm3/c136815/",
     # "M:/Desktop/ssh/trained_models/fm3/c273631/",
-    # "M:/Desktop/ssh/fm9/trained_models/33399/",
-    # "M:/Desktop/ssh/fm9/trained_models/82831/",
-    # "M:/Desktop/ssh/fm9/trained_models/116231/",
-    "M:/Desktop/ssh/fm9/trained_models/177687/",
-    "M:/Desktop/ssh/fm11/snapshots/c205223/"
+    # "M:/Desktop/ssh/trained_models/fm9/33399/",
+    # "M:/Desktop/ssh/trained_models/fm9/82831/",
+    # "M:/Desktop/ssh/trained_models/fm9/116231/",
+    # "M:/Desktop/ssh/fm9/trained_models/177687/",
+    # "M:/Desktop/ssh/fm11/snapshots/c205223/"
+    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/33399/",
+    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/82831/",
+    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/116231/"
 ]
 CHECKPOINT_NAME = "model"
 evaluations = []
