@@ -11,20 +11,22 @@ class RtgChoiceFrame:
         self.bg_color = bg_color
 
         self.rtg_choice_frame = Frame(root, width=500, bg=bg_color)
-        self.rtg_choice_frame.grid(row=0, column=0, sticky="we")
+        self.rtg_choice_frame.grid(row=0, column=0, sticky="we", columnspan=2)
+
+        self.rtg_choice_frame.grid_columnconfigure(1, weight=1)
 
         section_preview_label = Label(self.rtg_choice_frame, text="Zdjęcie RTG", fg=text_color_1, bg=bg_color, font=(font_1))
-        section_preview_label.grid(row=0, column=0, sticky="w")
+        section_preview_label.grid(row=0, column=0, sticky="w", columnspan=2)
 
         self.search_button = Button(self.rtg_choice_frame, image=self.img_search_button, bg=bg_color, activebackground=bg_color,
                                bd=0, cursor="hand2")
         self.search_button.grid(row=1, column=0, sticky="w")
 
         self.file_name_label = Label(self.rtg_choice_frame, text="...", fg=text_color_2, bg=bg_color, font=(font_2))
-        self.file_name_label.grid(row=1, column=1, sticky="w")
+        self.file_name_label.grid(row=1, column=1, sticky="w", padx=10, pady=5)
 
         self.preview_rtg_label = Label(self.rtg_choice_frame, image=self.img_rtg, bg=bg_color)
-        self.preview_rtg_label.grid(row=2, column=0, padx=10, pady=20)
+        self.preview_rtg_label.grid(row=2, column=0, padx=10, pady=20, columnspan=2)
 
         self.search_button.bind('<Enter>', self.__onSearchButtonEnter)
         self.search_button.bind('<Button-1>', self.__onSearchButtonClick)
@@ -73,6 +75,8 @@ class RtgChoiceFrame:
         rtg_file_name = os.path.basename(x)
         self.getInputFileNameCallback(rtg_file_name)
 
+        self.__updateRtgFileName(rtg_file_name)
+
         return Image.open(x)
 
     def __imageToSquare(self, img):
@@ -92,15 +96,15 @@ class RtgChoiceFrame:
 
         return img_square
 
+    def __updateRtgFileName(self, img):
+        self.file_name_label.config(text=img)
+
     def __updateRtgPreview(self, img):
-        # img = img.resize_and_crop((250, 250), Image.ANTIALIAS)
         size = 250
 
         img = img.resize((size, size))
 
-        #img.thumbnail((250, 250))
-
         self.img_rtg = ImageTk.PhotoImage(img)
         self.preview_rtg_label = Label(self.rtg_choice_frame, image=self.img_rtg, bg=self.bg_color)
-        self.preview_rtg_label.grid(row=2, column=0, padx=10, pady=20)
+        self.preview_rtg_label.grid(row=2, column=0, padx=10, pady=20, columnspan=2)
 

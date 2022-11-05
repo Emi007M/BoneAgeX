@@ -15,7 +15,7 @@ class BottomFrame:
 
     def updateLogs(self, rtg_file_name, gender_val, evaluations):
         self.logs_label.config(
-            text="Dokładność wyniku: ±14M dla 90% ocen, ±6M dla 60% ocen  | " +
-            " RTG: " + str(rtg_file_name) + " + Płeć: " + str(gender_val) +
-            " => Wiek kostny: " + str(evaluations))
+            text="Dokładność wyniku: ±14M dla 90% ocen, ±6M dla 60% ocen")#  | " +
+            # " RTG: " + str(rtg_file_name) + " + Płeć: " + str(gender_val) +
+            # " => Wiek kostny: " + str(evaluations))
 
