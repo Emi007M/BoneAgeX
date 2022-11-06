@@ -46,9 +46,9 @@ def get_images_as_data_for_evaluation(rtg_file_dir, gender): #0=female, 1=male
 
 
 models_to_use = [
-    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/33399/",
-    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/82831/",
-    "W:/Python Projects/BoneAgeX/ssh-final_models/trained_models/fm9/116231/"
+    "ssh-final_models/trained_models/fm9/33399/",
+    "ssh-final_models/trained_models/fm9/82831/",
+    "ssh-final_models/trained_models/fm9/116231/"
 ]
 CHECKPOINT_NAME = "model"
 

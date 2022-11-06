@@ -11,7 +11,7 @@ from eval_gui_data.gui_widgets.bottom_frame import BottomFrame
 # Defining i/o data
 gender_val = None # 0 - Female, 1 = Male
 rtg_val = None # 500x500 rgb jpg image
-eval_rtg_file = "W:/Python Projects/BoneAgeX/eval_gui_data/rtg.jpg"
+eval_rtg_file = "eval_gui_data/rtg.jpg"
 rtg_file_name = None
 
 evaluations = [None, None, None]
@@ -36,7 +36,7 @@ window.geometry("800x600")
 window.config(bg=color_bg_dark)
 
 # Defining gui imgs
-img_dir = "W:/Python Projects/BoneAgeX/eval_gui_data/gui_imgs/"
+img_dir = "eval_gui_data/gui_imgs/"
 
 # Defining layout
 

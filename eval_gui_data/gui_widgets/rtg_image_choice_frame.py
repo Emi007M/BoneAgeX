@@ -22,7 +22,7 @@ class RtgChoiceFrame:
                                bd=0, cursor="hand2")
         self.search_button.grid(row=1, column=0, sticky="w")
 
-        self.file_name_label = Label(self.rtg_choice_frame, text="...", fg=text_color_2, bg=bg_color, font=(font_2))
+        self.file_name_label = Label(self.rtg_choice_frame, text="", fg=text_color_2, bg=bg_color, font=(font_2))
         self.file_name_label.grid(row=1, column=1, sticky="w", padx=10, pady=5)
 
         self.preview_rtg_label = Label(self.rtg_choice_frame, image=self.img_rtg, bg=bg_color)

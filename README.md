@@ -42,5 +42,11 @@ Separate evaluation
 python3.6 main.py -i "C:/.../BoneAge/imgs_sm" -l "trained_models/5/"  -oz
 ```
 
+## Separate files
 
+# use_models.py
+Console script for evaluation of single or set of images with genders
+
+# eval_gui.py
+Window application for single image evaluation
 
