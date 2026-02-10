@@ -5,6 +5,8 @@ ssh-final_models/
 # PDF Atlas
 Atlas_of_Hand_Bone_Age.pdf
 
-# Python cache
+
 __pycache__/
 eval_gui_data/rtg.jpg
+BoneAgeX/
+readme_local.md
