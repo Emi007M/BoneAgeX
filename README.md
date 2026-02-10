@@ -49,4 +49,4 @@ Console script for evaluation of single or set of images with genders
 
 # eval_gui.py
 Window application for single image evaluation
-
+Requires folder with trained models 'ssh-final_models', which is not stored in github

@@ -1,0 +1,16 @@
+
+# SSH models folder
+ssh-final_models/
+
+# PDF Atlas
+Atlas_of_Hand_Bone_Age.pdf
+
+
+# Python cache
+__pycache__/
+# eval_gui_data folder contents (keep folder structure only)
+eval_gui_data/*
+!eval_gui_data/.gitignore
+eval_gui_data/rtg.jpg
+/eval_gui_data
+eval_gui_data/rtg.jpg
