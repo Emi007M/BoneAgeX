@@ -1,6 +1,7 @@
 from tkinter import *
 from eval_gui_data.gui_widgets.final_eval_frame import FinalEvalFrame
 from eval_gui_data.gui_widgets.partial_evals_frame import PartialEvalsFrame
+from eval_gui_data.gui_widgets.atlas_button_frame import AtlasButtonFrame
 
 class EvalFrame:
 
@@ -24,6 +25,8 @@ class EvalFrame:
         self.final_eval_frame_widget = FinalEvalFrame(
             self.eval_frame, img_dir, bg_color_final_eval, text_color_1, font_eval_y, font_eval_m)
 
+        self.atlas_button_widget = AtlasButtonFrame(self.eval_frame, img_dir, padx=30)
+
         self.hide_eval_frame = Frame(self.eval_frame, bg=bg_color)
         self.__hideEval()
 
@@ -38,6 +41,10 @@ class EvalFrame:
         self.__updateFinalEval(evaluations, gender_val)
 
         if all(elem is not None for elem in evaluations):
+            try:
+                self.atlas_button_widget.update_context(evaluations, gender_val)
+            except Exception:
+                pass
             self.__showEval()
         else:
             self.__hideEval()
@@ -51,14 +58,17 @@ class EvalFrame:
 
     def __showEval(self):
         self.hide_eval_frame.grid_forget()
+        self.atlas_button_widget.show()
 
     def __hideEval(self):
         self.hide_eval_frame.grid(row=2, column=0, columnspan=3, rowspan=2, sticky="nswe")
+        self.atlas_button_widget.hide()
 
     def __init_imgs(self, img_dir):
         self.img_dir = img_dir
 
         self.img_eval_ladder = PhotoImage(file=img_dir + "ladder.png")
+        
 
 
 
